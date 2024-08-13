@@ -1,0 +1,13 @@
+{
+  "name": "@codexporer.io/expo-ads",
+  "version": "1.0.0",
+  "main": "src/index.js",
+  "peerDependencies": {
+    "react-native-google-mobile-ads": "*",
+    "react": "*",
+    "styled-components": "*",
+    "react-native-paper": "*",
+    "lodash": "*",
+    "@codexporer.io/expo-device": "*"
+  }
+}
