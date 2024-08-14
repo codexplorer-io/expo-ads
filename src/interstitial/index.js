@@ -3,6 +3,7 @@ import {
     useEffect
 } from 'react';
 import { useInterstitialAd } from 'react-native-google-mobile-ads';
+import { getEvents } from '../events';
 
 export const useShowInterstitialAd = ({
     adUnitId,
@@ -22,7 +23,10 @@ export const useShowInterstitialAd = ({
 
     return useCallback(() => {
         setTimeout(() => {
-            isLoaded && show();
+            if (isLoaded) {
+                getEvents()?.adMobInterstitialAdShown?.();
+                show();
+            }
         }, delayMs);
     }, [delayMs, isLoaded, show]);
 };
@@ -43,6 +47,9 @@ export const useAutoShowInterstitialAd = ({
     }, [shouldShow, load]);
 
     useEffect(() => {
-        isLoaded && show();
+        if (isLoaded) {
+            getEvents()?.adMobInterstitialAdShown?.();
+            show();
+        }
     }, [isLoaded, show]);
 };
