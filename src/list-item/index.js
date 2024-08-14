@@ -40,6 +40,7 @@ import {
     AdMobActionTrigger,
     LocalAdAdvertiser
 } from './styled';
+import { getEvents } from '../events';
 
 const TOP_PADDING = 40;
 
@@ -48,7 +49,7 @@ export const initializeListItemAdsRepository = adsRepository => {
     listItemAdsRepository = adsRepository;
 };
 
-const AdMobItem = ({ height }) => {
+const AdMobItem = ({ height, isAdMobLoaded }) => {
     const theme = useTheme();
     const { nativeAd, nativeAdView } = useContext(NativeAdContext);
     const actionRef = useRef();
@@ -73,6 +74,10 @@ const AdMobItem = ({ height }) => {
             callToAction: findNodeHandle(actionRef.current)
         });
     }, [nativeAdView, actionRef]);
+
+    useEffect(() => {
+        isAdMobLoaded && getEvents()?.adMobItemRendered?.();
+    }, [isAdMobLoaded]);
 
     const mediaHeight = (
         itemLayout.height -
@@ -164,6 +169,10 @@ const LocalAdItem = ({ height }) => {
     } = useLayout({ height: 0 });
     const localAd = useMemo(() => sample(listItemAdsRepository), []);
 
+    useEffect(() => {
+        getEvents()?.localAdItemRendered?.(localAd);
+    }, [localAd]);
+
     const mediaHeight = (
         itemLayout.height -
         TOP_PADDING -
@@ -171,6 +180,11 @@ const LocalAdItem = ({ height }) => {
         MEDIA_TOP_MARGIN -
         actionLayout.height
     );
+
+    const onPress = () => {
+        localAd.action.execute();
+        getEvents()?.localAdItemActionExecuted?.(localAd);
+    };
 
     return !!localAd && (
         <Content
@@ -229,7 +243,7 @@ const LocalAdItem = ({ height }) => {
                     <AdMobActionWrapper>
                         <LocalAdAction
                             mode='contained'
-                            onPress={localAd.action.execute}
+                            onPress={onPress}
                         >
                             {localAd.action.title}
                         </LocalAdAction>
@@ -276,7 +290,10 @@ export const ListItemAd = React.memo(({
                         customControlsRequested: false
                     }}
                 >
-                    <AdMobItem height={height} />
+                    <AdMobItem
+                        height={height}
+                        isAdMobLoaded={isAdMobLoaded}
+                    />
                 </NativeAdView>
             </ShowView>
         </RootView>
