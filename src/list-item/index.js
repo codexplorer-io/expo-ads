@@ -8,6 +8,7 @@ import React, {
 } from 'react';
 import { useTheme } from 'react-native-paper';
 import toUpper from 'lodash/toUpper';
+import filter from 'lodash/filter';
 import { findNodeHandle } from 'react-native';
 import NativeAdView, { NativeAdContext } from 'react-native-admob-native-ads';
 import { useDimensions } from '@codexporer.io/react-hooks';
@@ -46,7 +47,7 @@ const TOP_PADDING = 40;
 
 let listItemAdsRepository = [];
 export const initializeListItemAdsRepository = adsRepository => {
-    listItemAdsRepository = adsRepository;
+    listItemAdsRepository = filter(adsRepository, ({ isSupported }) => isSupported?.() !== false);
 };
 
 const AdMobItem = ({ height, isAdMobLoaded }) => {
