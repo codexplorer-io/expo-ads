@@ -1,3 +1,4 @@
+export { BannerAd } from './banner';
 export {
     ListItemAd,
     initializeListItemAdsRepository
