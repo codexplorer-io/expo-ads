@@ -1,6 +1,8 @@
 import {
     useCallback,
-    useEffect
+    useEffect,
+    useRef,
+    useState
 } from 'react';
 import { useInterstitialAd } from 'react-native-google-mobile-ads';
 import { getEvents } from '../events';
@@ -11,24 +13,48 @@ export const useShowInterstitialAd = ({
     shouldPreload = false,
     ...requestOptions
 }) => {
+    const [shouldResetAd, setShouldResetAd] = useState(false);
     const {
         isLoaded,
+        isOpened,
         load,
         show
-    } = useInterstitialAd(adUnitId, requestOptions);
+    } = useInterstitialAd(
+        shouldResetAd ? undefined : adUnitId,
+        requestOptions
+    );
 
     useEffect(() => {
-        shouldPreload && load();
-    }, [shouldPreload, load]);
+        !shouldResetAd && shouldPreload && load();
+    }, [shouldResetAd, shouldPreload, load]);
+
+    useEffect(() => {
+        shouldResetAd && setShouldResetAd(false);
+    }, [shouldResetAd]);
+
+    const callbackRef = useRef();
+    callbackRef.current = {
+        isLoaded,
+        isOpened,
+        show,
+        delayMs
+    };
 
     return useCallback(() => {
+        const { delayMs } = callbackRef.current;
         setTimeout(() => {
-            if (isLoaded) {
+            const {
+                isLoaded,
+                isOpened,
+                show
+            } = callbackRef.current;
+            if (!isOpened && isLoaded) {
+                setShouldResetAd(true);
                 getEvents()?.adMobInterstitialAdShown?.();
                 show();
             }
         }, delayMs);
-    }, [delayMs, isLoaded, show]);
+    }, []);
 };
 
 export const useAutoShowInterstitialAd = ({
