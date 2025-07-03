@@ -1,19 +1,18 @@
 import React, {
     useEffect,
     useState,
-    useRef,
-    useContext,
-    useCallback,
     useMemo
 } from 'react';
-import { useTheme } from 'react-native-paper';
-import toUpper from 'lodash/toUpper';
 import filter from 'lodash/filter';
-import { findNodeHandle } from 'react-native';
-import NativeAdView, { NativeAdContext } from 'react-native-admob-native-ads';
 import { useDimensions } from '@codexporer.io/react-hooks';
 import { useLayout } from '@codexporer.io/expo-layout-state';
 import sample from 'lodash/sample';
+import {
+    NativeAd,
+    NativeAdView,
+    NativeAsset,
+    NativeAssetType
+} from 'react-native-google-mobile-ads';
 import {
     MEDIA_TOP_MARGIN,
     ShowView,
@@ -29,7 +28,6 @@ import {
     LocalAdLabel,
     MediaWrapper,
     AdMobMedia,
-    AdMobImage,
     LocalAdImage,
     AdMobIcon,
     LocalAdIcon,
@@ -38,7 +36,6 @@ import {
     AdMobActionWrapper,
     AdMobAction,
     LocalAdAction,
-    AdMobActionTrigger,
     LocalAdAdvertiser
 } from './styled';
 import { getEvents } from '../events';
@@ -50,10 +47,10 @@ export const initializeListItemAdsRepository = adsRepository => {
     listItemAdsRepository = filter(adsRepository, ({ isSupported }) => isSupported?.() !== false);
 };
 
-const AdMobItem = ({ height, isAdMobLoaded }) => {
-    const theme = useTheme();
-    const { nativeAd, nativeAdView } = useContext(NativeAdContext);
-    const actionRef = useRef();
+const AdMobItem = ({
+    nativeAd,
+    height
+}) => {
     const { width } = useDimensions('window');
     const {
         currentLayout: itemLayout,
@@ -68,17 +65,9 @@ const AdMobItem = ({ height, isAdMobLoaded }) => {
         setCurrentLayout: setActionLayout
     } = useLayout({ height: 0 });
 
-    const onActionLayout = useCallback(() => {
-        if (!nativeAdView) return;
-
-        nativeAdView.setNativeProps({
-            callToAction: findNodeHandle(actionRef.current)
-        });
-    }, [nativeAdView, actionRef]);
-
     useEffect(() => {
-        isAdMobLoaded && getEvents()?.adMobItemRendered?.();
-    }, [isAdMobLoaded]);
+        getEvents()?.adMobItemRendered?.();
+    }, []);
 
     const mediaHeight = (
         itemLayout.height -
@@ -102,28 +91,38 @@ const AdMobItem = ({ height, isAdMobLoaded }) => {
             >
                 {!!nativeAd.icon && nativeAd.icon !== 'noicon' && (
                     <>
-                        <AdMobIcon />
+                        <NativeAsset assetType={NativeAssetType.ICON}>
+                            <AdMobIcon
+                                source={{ uri: nativeAd.icon.url }}
+                                resizeMode='contain'
+                            />
+                        </NativeAsset>
                         <HorizontalSpacer />
                     </>
                 )}
                 <ContentColumn>
-                    <AdMobTitle />
-                    {!!nativeAd.tagline && (
+                    <NativeAsset assetType={NativeAssetType.HEADLINE}>
+                        <AdMobTitle>{nativeAd.headline}</AdMobTitle>
+                    </NativeAsset>
+                    {!!nativeAd.body && (
                         <>
                             <VerticalSpacer size={5} />
-                            <AdMobLabel />
+                            <NativeAsset assetType={NativeAssetType.BODY}>
+                                <AdMobLabel>{nativeAd.body}</AdMobLabel>
+                            </NativeAsset>
                         </>
                     )}
                     {!!nativeAd.advertiser && (
                         <>
                             <VerticalSpacer size={5} />
-                            <AdMobAdvertiser />
+                            <NativeAsset assetType={NativeAssetType.ADVERTISER}>
+                                <AdMobAdvertiser>{nativeAd.advertiser}</AdMobAdvertiser>
+                            </NativeAsset>
                         </>
                     )}
                 </ContentColumn>
             </ContentRow>
             <MediaWrapper height={mediaHeight}>
-                <AdMobImage resizeMode='contain' />
                 <AdMobMedia />
             </MediaWrapper>
             {!!nativeAd.callToAction && (
@@ -132,21 +131,17 @@ const AdMobItem = ({ height, isAdMobLoaded }) => {
                 >
                     <VerticalSpacer size={10} />
                     <AdMobActionWrapper>
-                        <AdMobAction mode='contained'>
+                        <AdMobAction
+                            mode='contained'
+                        >
                             {nativeAd.callToAction}
                         </AdMobAction>
-                        <AdMobActionTrigger
-                            ref={actionRef}
-                            onLayout={onActionLayout}
-                            title={toUpper(nativeAd.callToAction)}
-                            buttonAndroidStyle={{
-                                color: theme.colors.background,
-                                backgroundColor: theme.colors.primary,
-                                borderColor: theme.colors.primary,
-                                fontSize: 14,
-                                borderRadius: 4
-                            }}
-                        />
+                        <VerticalSpacer size={10} />
+                        <LocalAdAction
+                            mode='contained'
+                        >
+                            {nativeAd.callToAction}
+                        </LocalAdAction>
                     </AdMobActionWrapper>
                 </ActionRow>
             )}
@@ -260,42 +255,26 @@ export const ListItemAd = React.memo(({
     adUnitId,
     height = 400
 }) => {
-    const nativeAdViewRef = useRef();
-    const [
-        isAdMobLoaded,
-        setIsAdMobLoaded
-    ] = useState(false);
+    const [nativeAd, setNativeAd] = useState();
 
     useEffect(() => {
-        nativeAdViewRef.current?.loadAd();
-    }, []);
-
-    const onAdLoaded = () => {
-        setIsAdMobLoaded(true);
-    };
+        NativeAd.createForAdRequest(adUnitId).then(setNativeAd);
+    }, [adUnitId]);
 
     return (
         <RootView>
-            <ShowView isVisible={!isAdMobLoaded}>
+            <ShowView isVisible={!nativeAd}>
                 <LocalAdItem height={height} />
             </ShowView>
-            <ShowView isVisible={isAdMobLoaded}>
-                <NativeAdView
-                    ref={nativeAdViewRef}
-                    adUnitID={adUnitId}
-                    onAdLoaded={onAdLoaded}
-                    adChoicesPlacement='topRight'
-                    videoOptions={{
-                        muted: true,
-                        clickToExpand: false,
-                        customControlsRequested: false
-                    }}
-                >
-                    <AdMobItem
-                        height={height}
-                        isAdMobLoaded={isAdMobLoaded}
-                    />
-                </NativeAdView>
+            <ShowView isVisible>
+                {!!nativeAd && (
+                    <NativeAdView nativeAd={nativeAd}>
+                        <AdMobItem
+                            nativeAd={nativeAd}
+                            height={height}
+                        />
+                    </NativeAdView>
+                )}
             </ShowView>
         </RootView>
     );

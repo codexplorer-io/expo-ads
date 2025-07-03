@@ -1,18 +1,7 @@
 import styled from 'styled-components/native';
-import {
-    Button,
-    Text
-} from 'react-native-paper';
+import { Button, Text } from 'react-native-paper';
 import { OS } from '@codexporer.io/expo-device';
-import {
-    HeadlineView,
-    TaglineView,
-    AdvertiserView,
-    NativeMediaView,
-    ImageView,
-    IconView,
-    RnAdMobButton
-} from 'react-native-admob-native-ads';
+import { NativeMediaView } from 'react-native-google-mobile-ads';
 
 export const MEDIA_TOP_MARGIN = 10;
 
@@ -57,39 +46,30 @@ export const Badge = styled(Text)`
     color: ${({ theme }) => theme.colors.primary};
 `;
 
-export const AdMobTitle = styled(HeadlineView)`
+export const LocalAdTitle = styled.Text`
     font-size: 18px;
     font-weight: 600;
     line-height: 20px;
+    color: ${({ theme }) => theme.colors.foreground};
 `;
 
-export const LocalAdTitle = styled(Text)`
-    font-size: 18px;
-    font-weight: 600;
-    line-height: 20px;
-`;
+export const AdMobTitle = LocalAdTitle;
 
-export const AdMobLabel = styled(TaglineView)`
+export const LocalAdLabel = styled.Text`
     font-size: 14px;
     line-height: 16px;
     color: ${({ theme }) => theme.colors.placeholder};
 `;
 
-export const LocalAdLabel = styled(Text)`
-    font-size: 14px;
-    line-height: 16px;
-    color: ${({ theme }) => theme.colors.placeholder};
-`;
+export const AdMobLabel = LocalAdLabel;
 
-export const AdMobAdvertiser = styled(AdvertiserView)`
+export const LocalAdAdvertiser = styled.Text`
     font-weight: 600;
     font-size: 10px;
+    color: ${({ theme }) => theme.colors.foreground};
 `;
 
-export const LocalAdAdvertiser = styled(Text)`
-    font-weight: 600;
-    font-size: 10px;
-`;
+export const AdMobAdvertiser = LocalAdAdvertiser;
 
 export const MediaWrapper = styled.View`
     height: ${({ height }) => height}px;
@@ -106,14 +86,6 @@ export const AdMobMedia = styled(NativeMediaView)`
     bottom: 0;
 `;
 
-export const AdMobImage = styled(ImageView)`
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-`;
-
 export const LocalAdImage = styled.Image`
     position: absolute;
     top: 0;
@@ -122,15 +94,12 @@ export const LocalAdImage = styled.Image`
     bottom: 0;
 `;
 
-export const AdMobIcon = styled(IconView)`
-    width: 60px;
-    height: 60px;
-`;
-
 export const LocalAdIcon = styled.Image`
     width: 60px;
     height: 60px;
 `;
+
+export const AdMobIcon = LocalAdIcon;
 
 export const ActionRow = styled.View`
     display: flex;
@@ -141,22 +110,14 @@ export const AdMobActionWrapper = OS.isIOS() ? styled.View`
     position: relative;
 ` : ({ children }) => children;
 
-export const AdMobAction = OS.isIOS() ? styled(Button)`` : () => null;
-
-export const AdMobActionTrigger = OS.isIOS() ? styled.View`
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-` : styled(RnAdMobButton)`
-    border-color: ${({ buttonAndroidStyle }) => buttonAndroidStyle.borderColor};
-    background-color: ${({ buttonAndroidStyle }) => buttonAndroidStyle.backgroundColor};
-    color: ${({ buttonAndroidStyle }) => buttonAndroidStyle.color};
-    font-size: ${({ buttonAndroidStyle }) => buttonAndroidStyle.fontSize}px;
-    font-weight: 600;
-    border-radius: ${({ buttonAndroidStyle }) => buttonAndroidStyle.borderRadius}px;
-    min-height: 40px;
-`;
-
 export const LocalAdAction = styled(Button)``;
+
+export const AdMobAction = styled(Text)`
+    background-color: ${({ theme }) => theme.colors.primary};
+    border-radius: 4px;
+    font-size: 15px;
+    font-weight: 600;
+    line-height: 38px;
+    text-align: center;
+    color: ${({ theme }) => theme.colors.onPrimary};
+`;
