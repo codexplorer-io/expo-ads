@@ -131,17 +131,13 @@ const AdMobItem = ({
                 >
                     <VerticalSpacer size={10} />
                     <AdMobActionWrapper>
-                        <AdMobAction
-                            mode='contained'
-                        >
-                            {nativeAd.callToAction}
-                        </AdMobAction>
-                        <VerticalSpacer size={10} />
-                        <LocalAdAction
-                            mode='contained'
-                        >
-                            {nativeAd.callToAction}
-                        </LocalAdAction>
+                        <NativeAsset assetType={NativeAssetType.CALL_TO_ACTION}>
+                            <AdMobAction
+                                mode='contained'
+                            >
+                                {nativeAd.callToAction}
+                            </AdMobAction>
+                        </NativeAsset>
                     </AdMobActionWrapper>
                 </ActionRow>
             )}

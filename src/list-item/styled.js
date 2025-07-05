@@ -112,7 +112,7 @@ export const AdMobActionWrapper = OS.isIOS() ? styled.View`
 
 export const LocalAdAction = styled(Button)``;
 
-export const AdMobAction = styled(Text)`
+export const AdMobAction = styled.Text`
     background-color: ${({ theme }) => theme.colors.primary};
     border-radius: 4px;
     font-size: 15px;
