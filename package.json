@@ -5,9 +5,8 @@
   "peerDependencies": {
     "react-native-google-mobile-ads": "*",
     "react": "*",
-    "styled-components": "*",
-    "react-native-paper": "*",
     "lodash": "*",
-    "@codexporer.io/expo-device": "*"
+    "@codexporer.io/expo-device": "*",
+    "@codexporer.io/expo-app-theme": "*"
   }
 }
