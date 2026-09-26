@@ -7,5 +7,9 @@ export {
     useShowInterstitialAd,
     useAutoShowInterstitialAd
 } from './interstitial';
+export {
+    useShowRewardedAd,
+    useAutoShowRewardedAd
+} from './rewarded';
 export { requestAdsDisplayConsent } from './display-consent';
 export { initializeEvents } from './events';
