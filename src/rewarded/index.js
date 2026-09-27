@@ -51,7 +51,7 @@ export const useShowRewardedAd = ({
             } = callbackRef.current;
             if (!isOpened && isLoaded) {
                 setShouldResetAd(true);
-                getEvents()?.adMobInterstitialAdShown?.();
+                getEvents()?.adMobRewardedAdShown?.();
                 show();
             }
         }, delayMs);
@@ -81,7 +81,7 @@ export const useAutoShowRewardedAd = ({
 
     useEffect(() => {
         if (isLoaded) {
-            getEvents()?.adMobInterstitialAdShown?.();
+            getEvents()?.adMobRewardedAdShown?.();
             show();
         }
     }, [isLoaded, show]);
