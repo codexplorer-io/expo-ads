@@ -3,7 +3,15 @@ import React, {
     useState,
     useMemo
 } from 'react';
-import { View, Text, Image, StyleSheet, TouchableOpacity } from 'react-native';
+import {
+    View,
+    Text,
+    Image,
+    StyleSheet,
+    TouchableOpacity,
+    type LayoutChangeEvent,
+    type ImageProps
+} from 'react-native';
 import filter from 'lodash/filter';
 import sample from 'lodash/sample';
 import { useDimensions } from '@codexporer.io/react-hooks';
@@ -22,34 +30,54 @@ import { getEvents } from '../events';
 const MEDIA_TOP_MARGIN = 10;
 const TOP_PADDING = 40;
 
-const VerticalSpacer = ({ size = 10 }) => <View style={{ height: size }} />;
-const HorizontalSpacer = ({ size = 10 }) => <View style={{ width: size }} />;
+const VerticalSpacer: React.FC<{ size?: number }> = ({ size = 10 }) => (
+    <View style={{ height: size }} />
+);
+const HorizontalSpacer: React.FC<{ size?: number }> = ({ size = 10 }) => (
+    <View style={{ width: size }} />
+);
 
-const Content = ({ children, onLayout, height }) => (
+interface ContentProps {
+    children: React.ReactNode;
+    onLayout?: (event: LayoutChangeEvent) => void;
+    height?: number;
+}
+
+const Content: React.FC<ContentProps> = ({ children, onLayout, height }) => (
     <View style={[styles.content, { height }]} onLayout={onLayout}>
         {children}
     </View>
 );
 
-const ShowView = ({ children, isVisible }) => (
+interface ShowViewProps {
+    children: React.ReactNode;
+    isVisible: boolean;
+}
+
+const ShowView: React.FC<ShowViewProps> = ({ children, isVisible }) => (
     <View style={{ display: isVisible ? 'flex' : 'none' }}>
         {children}
     </View>
 );
 
-const ContentRow = ({ children, onLayout }) => (
+interface ContentRowProps {
+    children: React.ReactNode;
+    onLayout?: (event: LayoutChangeEvent) => void;
+}
+
+const ContentRow: React.FC<ContentRowProps> = ({ children, onLayout }) => (
     <View style={styles.contentRow} onLayout={onLayout}>
         {children}
     </View>
 );
 
-const ContentColumn = ({ children }) => (
+const ContentColumn: React.FC<{ children: React.ReactNode }> = ({ children }) => (
     <View style={styles.contentColumn}>
         {children}
     </View>
 );
 
-const Badge = ({ children }) => {
+const Badge: React.FC<{ children: React.ReactNode }> = ({ children }) => {
     const theme = useAppTheme();
     const primaryColor = theme.primary;
     return (
@@ -59,7 +87,7 @@ const Badge = ({ children }) => {
     );
 };
 
-const LocalAdTitle = ({ children }) => {
+const LocalAdTitle: React.FC<{ children: React.ReactNode }> = ({ children }) => {
     const theme = useAppTheme();
     const textColor = theme.text;
     return (
@@ -70,7 +98,7 @@ const LocalAdTitle = ({ children }) => {
 };
 const AdMobTitle = LocalAdTitle;
 
-const LocalAdLabel = ({ children }) => {
+const LocalAdLabel: React.FC<{ children: React.ReactNode }> = ({ children }) => {
     const theme = useAppTheme();
     const placeholderColor = theme.text;
     return (
@@ -81,7 +109,7 @@ const LocalAdLabel = ({ children }) => {
 };
 const AdMobLabel = LocalAdLabel;
 
-const LocalAdAdvertiser = ({ children }) => {
+const LocalAdAdvertiser: React.FC<{ children: React.ReactNode }> = ({ children }) => {
     const theme = useAppTheme();
     const textColor = theme.text;
     return (
@@ -92,28 +120,43 @@ const LocalAdAdvertiser = ({ children }) => {
 };
 const AdMobAdvertiser = LocalAdAdvertiser;
 
-const MediaWrapper = ({ children, height }) => (
+const MediaWrapper: React.FC<{ children: React.ReactNode; height: number }> = ({ children, height }) => (
     <View style={[styles.mediaWrapper, { height }]}>
         {children}
     </View>
 );
 
-const AdMobMedia = (props) => <NativeMediaView style={styles.absoluteFill} {...props} />;
-const LocalAdImage = (props) => <Image style={styles.absoluteFill} {...props} />;
-const LocalAdIcon = (props) => <Image style={styles.icon} {...props} />;
+const AdMobMedia: React.FC = () => (
+    <NativeMediaView style={styles.absoluteFill} />
+);
+const LocalAdImage: React.FC<ImageProps> = (props) => (
+    <Image style={styles.absoluteFill} {...props} />
+);
+const LocalAdIcon: React.FC<ImageProps> = (props) => (
+    <Image style={styles.icon} {...props} />
+);
 const AdMobIcon = LocalAdIcon;
 
-const ActionRow = ({ children, onLayout }) => (
+interface ActionRowProps {
+    children: React.ReactNode;
+    onLayout?: (event: LayoutChangeEvent) => void;
+}
+
+const ActionRow: React.FC<ActionRowProps> = ({ children, onLayout }) => (
     <View style={styles.actionRow} onLayout={onLayout}>
         {children}
     </View>
 );
 
-const AdMobActionWrapper = ({ children }) => OS.isIOS() ? (
-    <View style={styles.relative}>{children}</View>
-) : children;
+const AdMobActionWrapper: React.FC<{ children: React.ReactNode }> = ({ children }) => (
+    OS.isIOS() ? (
+        <View style={styles.relative}>{children}</View>
+    ) : (
+        <>{children}</>
+    )
+);
 
-const AdMobAction = ({ children }) => {
+const AdMobAction: React.FC<{ children: React.ReactNode }> = ({ children }) => {
     const theme = useAppTheme();
     const primaryColor = theme.primary;
     const onPrimaryColor = theme.background;
@@ -124,7 +167,12 @@ const AdMobAction = ({ children }) => {
     );
 };
 
-const LocalAdAction = ({ children, onPress }) => {
+interface LocalAdActionProps {
+    children: React.ReactNode;
+    onPress: () => void;
+}
+
+const LocalAdActionButton: React.FC<LocalAdActionProps> = ({ children, onPress }) => {
     const theme = useAppTheme();
     const primaryColor = theme.primary;
     const onPrimaryColor = theme.background;
@@ -140,12 +188,32 @@ const LocalAdAction = ({ children, onPress }) => {
     );
 };
 
-let listItemAdsRepository = [];
-export const initializeListItemAdsRepository = adsRepository => {
+interface LocalAdAction {
+    title: string;
+    execute: () => void;
+}
+
+export interface LocalAdItemData {
+    iconUrl?: string;
+    title: string;
+    description?: string;
+    advertiser?: string;
+    imageUrl?: string;
+    action?: LocalAdAction;
+    isSupported?: () => boolean;
+}
+
+let listItemAdsRepository: LocalAdItemData[] = [];
+export const initializeListItemAdsRepository = (adsRepository: LocalAdItemData[]): void => {
     listItemAdsRepository = filter(adsRepository, ({ isSupported }) => isSupported?.() !== false);
 };
 
-const AdMobItem = ({
+interface AdMobItemProps {
+    nativeAd: NativeAd;
+    height?: number;
+}
+
+const AdMobItem: React.FC<AdMobItemProps> = ({
     nativeAd,
     height
 }) => {
@@ -153,7 +221,7 @@ const AdMobItem = ({
     const {
         currentLayout: itemLayout,
         setCurrentLayout: setItemLayout
-    } = useLayout({ width, height });
+    } = useLayout({ width, height: height ?? 0 });
     const {
         currentLayout: contentLayout,
         setCurrentLayout: setContentLayout
@@ -177,7 +245,7 @@ const AdMobItem = ({
 
     return (
         <Content
-            onLayout={event => setItemLayout(event.nativeEvent.layout)}
+            onLayout={(event: LayoutChangeEvent) => setItemLayout(event.nativeEvent.layout)}
             height={height}
         >
             <Badge>
@@ -185,14 +253,14 @@ const AdMobItem = ({
             </Badge>
             <VerticalSpacer size={TOP_PADDING} />
             <ContentRow
-                onLayout={event => setContentLayout(event.nativeEvent.layout)}
+                onLayout={(event: LayoutChangeEvent) => setContentLayout(event.nativeEvent.layout)}
             >
-                {!!nativeAd.icon && nativeAd.icon !== 'noicon' && (
+                {Boolean(nativeAd.icon && (nativeAd.icon as object | string) !== 'noicon') && (
                     <>
                         <NativeAsset assetType={NativeAssetType.ICON}>
                             <AdMobIcon
-                                source={{ uri: nativeAd.icon.url }}
-                                resizeMode='contain'
+                                source={{ uri: nativeAd.icon?.url }}
+                                resizeMode="contain"
                             />
                         </NativeAsset>
                         <HorizontalSpacer />
@@ -202,7 +270,7 @@ const AdMobItem = ({
                     <NativeAsset assetType={NativeAssetType.HEADLINE}>
                         <AdMobTitle>{nativeAd.headline}</AdMobTitle>
                     </NativeAsset>
-                    {!!nativeAd.body && (
+                    {Boolean(nativeAd.body) && (
                         <>
                             <VerticalSpacer size={5} />
                             <NativeAsset assetType={NativeAssetType.BODY}>
@@ -210,7 +278,7 @@ const AdMobItem = ({
                             </NativeAsset>
                         </>
                     )}
-                    {!!nativeAd.advertiser && (
+                    {Boolean(nativeAd.advertiser) && (
                         <>
                             <VerticalSpacer size={5} />
                             <NativeAsset assetType={NativeAssetType.ADVERTISER}>
@@ -223,9 +291,9 @@ const AdMobItem = ({
             <MediaWrapper height={mediaHeight}>
                 <AdMobMedia />
             </MediaWrapper>
-            {!!nativeAd.callToAction && (
+            {Boolean(nativeAd.callToAction) && (
                 <ActionRow
-                    onLayout={event => setActionLayout(event.nativeEvent.layout)}
+                    onLayout={(event: LayoutChangeEvent) => setActionLayout(event.nativeEvent.layout)}
                 >
                     <VerticalSpacer size={10} />
                     <AdMobActionWrapper>
@@ -241,12 +309,16 @@ const AdMobItem = ({
     );
 };
 
-const LocalAdItem = ({ height }) => {
+interface LocalAdItemProps {
+    height?: number;
+}
+
+const LocalAdItem: React.FC<LocalAdItemProps> = ({ height }) => {
     const { width } = useDimensions('window');
     const {
         currentLayout: itemLayout,
         setCurrentLayout: setItemLayout
-    } = useLayout({ width, height });
+    } = useLayout({ width, height: height ?? 0 });
     const {
         currentLayout: contentLayout,
         setCurrentLayout: setContentLayout
@@ -261,6 +333,10 @@ const LocalAdItem = ({ height }) => {
         getEvents()?.localAdItemRendered?.(localAd);
     }, [localAd]);
 
+    if (!localAd) {
+        return null;
+    }
+
     const mediaHeight = (
         itemLayout.height -
         TOP_PADDING -
@@ -269,14 +345,14 @@ const LocalAdItem = ({ height }) => {
         actionLayout.height
     );
 
-    const onPress = () => {
-        localAd.action.execute();
+    const onPress = (): void => {
+        localAd.action?.execute();
         getEvents()?.localAdItemActionExecuted?.(localAd);
     };
 
-    return !!localAd && (
+    return (
         <Content
-            onLayout={event => setItemLayout(event.nativeEvent.layout)}
+            onLayout={(event: LayoutChangeEvent) => setItemLayout(event.nativeEvent.layout)}
             height={height}
         >
             <Badge>
@@ -284,13 +360,13 @@ const LocalAdItem = ({ height }) => {
             </Badge>
             <VerticalSpacer size={TOP_PADDING} />
             <ContentRow
-                onLayout={event => setContentLayout(event.nativeEvent.layout)}
+                onLayout={(event: LayoutChangeEvent) => setContentLayout(event.nativeEvent.layout)}
             >
-                {!!localAd.iconUrl && (
+                {Boolean(localAd.iconUrl) && (
                     <>
                         <LocalAdIcon
                             source={{ uri: localAd.iconUrl }}
-                            resizeMode='contain'
+                            resizeMode="contain"
                         />
                         <HorizontalSpacer />
                     </>
@@ -299,7 +375,7 @@ const LocalAdItem = ({ height }) => {
                     <LocalAdTitle>
                         {localAd.title}
                     </LocalAdTitle>
-                    {!!localAd.description && (
+                    {Boolean(localAd.description) && (
                         <>
                             <VerticalSpacer size={5} />
                             <LocalAdLabel>
@@ -307,7 +383,7 @@ const LocalAdItem = ({ height }) => {
                             </LocalAdLabel>
                         </>
                     )}
-                    {!!localAd.advertiser && (
+                    {Boolean(localAd.advertiser) && (
                         <>
                             <VerticalSpacer size={5} />
                             <LocalAdAdvertiser>
@@ -320,20 +396,20 @@ const LocalAdItem = ({ height }) => {
             <MediaWrapper height={mediaHeight}>
                 <LocalAdImage
                     source={{ uri: localAd.imageUrl }}
-                    resizeMode='contain'
+                    resizeMode="contain"
                 />
             </MediaWrapper>
-            {!!localAd.action && (
+            {Boolean(localAd.action) && (
                 <ActionRow
-                    onLayout={event => setActionLayout(event.nativeEvent.layout)}
+                    onLayout={(event: LayoutChangeEvent) => setActionLayout(event.nativeEvent.layout)}
                 >
                     <VerticalSpacer size={10} />
                     <AdMobActionWrapper>
-                        <LocalAdAction
+                        <LocalAdActionButton
                             onPress={onPress}
                         >
-                            {localAd.action.title}
-                        </LocalAdAction>
+                            {localAd.action?.title}
+                        </LocalAdActionButton>
                     </AdMobActionWrapper>
                 </ActionRow>
             )}
@@ -341,15 +417,25 @@ const LocalAdItem = ({ height }) => {
     );
 };
 
-export const ListItemAd = React.memo(({
+interface ListItemRootViewProps {
+    children?: React.ReactNode;
+}
+
+interface ListItemAdProps {
+    RootView: React.ComponentType<ListItemRootViewProps>;
+    adUnitId: string;
+    height?: number;
+}
+
+export const ListItemAd: React.FC<ListItemAdProps> = React.memo(({
     RootView,
     adUnitId,
     height = 400
 }) => {
-    const [nativeAd, setNativeAd] = useState();
+    const [nativeAd, setNativeAd] = useState<NativeAd | undefined>();
 
     useEffect(() => {
-        NativeAd.createForAdRequest(adUnitId).then(setNativeAd);
+        void NativeAd.createForAdRequest(adUnitId).then(setNativeAd);
     }, [adUnitId]);
 
     return (
@@ -357,15 +443,15 @@ export const ListItemAd = React.memo(({
             <ShowView isVisible={!nativeAd}>
                 <LocalAdItem height={height} />
             </ShowView>
-            <ShowView isVisible>
-                {!!nativeAd && (
+            <ShowView isVisible={Boolean(nativeAd)}>
+                {nativeAd ? (
                     <NativeAdView nativeAd={nativeAd}>
                         <AdMobItem
                             nativeAd={nativeAd}
                             height={height}
                         />
                     </NativeAdView>
-                )}
+                ) : null}
             </ShowView>
         </RootView>
     );
