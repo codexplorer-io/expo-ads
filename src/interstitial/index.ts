@@ -27,32 +27,28 @@ interface CallbackRefState {
 
 export const useShowInterstitialAd = ({
     adUnitId,
-    delayMs = 2000,
+    delayMs = 0,
     shouldPreload = false,
     ...requestOptions
 }: UseShowInterstitialAdOptions): (() => void) => {
     const [shouldResetAd, setShouldResetAd] = useState<boolean>(false);
     const {
-        isLoaded,
-        isOpened,
-        load,
+        status,
         show
-    } = useInterstitialAd(
-        shouldResetAd ? null : adUnitId,
-        requestOptions
-    );
-
-    useEffect(() => {
-        if (!shouldResetAd && shouldPreload) {
-            load();
-        }
-    }, [shouldResetAd, shouldPreload, load]);
+    } = useInterstitialAd({
+        adUnitId: shouldResetAd ? null : adUnitId,
+        requestOptions,
+        autoLoad: shouldPreload && !shouldResetAd
+    });
 
     useEffect(() => {
         if (shouldResetAd) {
             setShouldResetAd(false);
         }
     }, [shouldResetAd]);
+
+    const isLoaded = status === 'loaded';
+    const isOpened = status === 'showing' || status === 'closed';
 
     const callbackRef = useRef<CallbackRefState>({
         isLoaded,
@@ -67,20 +63,25 @@ export const useShowInterstitialAd = ({
         delayMs
     };
 
-    return useCallback((): void => {
+    return useCallback(async () => {
         const currentDelay = callbackRef.current.delayMs;
-        setTimeout(() => {
-            const {
-                isLoaded: loaded,
-                isOpened: opened,
-                show: showAd
-            } = callbackRef.current;
-            if (!opened && loaded) {
-                setShouldResetAd(true);
-                getEvents()?.adMobInterstitialAdShown?.();
-                showAd();
-            }
-        }, currentDelay);
+        return new Promise<void>(resolve => {
+            setTimeout(() => {
+                const {
+                    isLoaded: loaded,
+                    isOpened: opened,
+                    show: showAd
+                } = callbackRef.current;
+                if (!opened && loaded) {
+                    setShouldResetAd(true);
+                    getEvents()?.adMobInterstitialAdShown?.();
+                    showAd();
+                    setTimeout(resolve, 10);
+                } else {
+                    resolve();
+                }
+            }, currentDelay)
+        });
     }, []);
 };
 
@@ -90,21 +91,18 @@ export const useAutoShowInterstitialAd = ({
     ...requestOptions
 }: UseAutoShowInterstitialAdOptions): void => {
     const {
-        isLoaded,
-        load,
+        status,
         show
-    } = useInterstitialAd(adUnitId, requestOptions);
+    } = useInterstitialAd({
+        adUnitId,
+        requestOptions,
+        autoLoad: shouldShow
+    });
 
     useEffect(() => {
-        if (shouldShow) {
-            load();
-        }
-    }, [shouldShow, load]);
-
-    useEffect(() => {
-        if (isLoaded) {
+        if (shouldShow && status === 'loaded') {
             getEvents()?.adMobInterstitialAdShown?.();
             show();
         }
-    }, [isLoaded, show]);
+    }, [shouldShow, status, show]);
 };

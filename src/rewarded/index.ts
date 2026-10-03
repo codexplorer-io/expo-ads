@@ -36,33 +36,29 @@ interface CallbackRefState {
 
 export const useShowRewardedAd = ({
     adUnitId,
-    delayMs = 2000,
+    delayMs = 0,
     shouldPreload = false,
     ...requestOptions
 }: UseShowRewardedAdOptions): ShowRewardedAdResult => {
     const [shouldResetAd, setShouldResetAd] = useState<boolean>(false);
     const {
-        isLoaded,
-        isOpened,
-        load,
+        status,
         show,
-        isEarnedReward
-    } = useRewardedAd(
-        shouldResetAd ? null : adUnitId,
-        requestOptions
-    );
-
-    useEffect(() => {
-        if (!shouldResetAd && shouldPreload) {
-            load();
-        }
-    }, [shouldResetAd, shouldPreload, load]);
+        earnedReward
+    } = useRewardedAd({
+        adUnitId: shouldResetAd ? null : adUnitId,
+        requestOptions,
+        autoLoad: shouldPreload && !shouldResetAd
+    });
 
     useEffect(() => {
         if (shouldResetAd) {
             setShouldResetAd(false);
         }
     }, [shouldResetAd]);
+
+    const isLoaded = status === 'loaded';
+    const isOpened = status === 'showing' || status === 'closed';
 
     const callbackRef = useRef<CallbackRefState>({
         isLoaded,
@@ -77,24 +73,29 @@ export const useShowRewardedAd = ({
         delayMs
     };
 
-    const showRewardedAd = useCallback((): void => {
+    const showRewardedAd = useCallback(async () => {
         const currentDelay = callbackRef.current.delayMs;
-        setTimeout(() => {
-            const {
-                isLoaded: loaded,
-                isOpened: opened,
-                show: showAd
-            } = callbackRef.current;
-            if (!opened && loaded) {
-                setShouldResetAd(true);
-                getEvents()?.adMobRewardedAdShown?.();
-                showAd();
-            }
-        }, currentDelay);
+        return new Promise<void>(resolve => {
+            setTimeout(() => {
+                const {
+                    isLoaded: loaded,
+                    isOpened: opened,
+                    show: showAd
+                } = callbackRef.current;
+                if (!opened && loaded) {
+                    setShouldResetAd(true);
+                    getEvents()?.adMobRewardedAdShown?.();
+                    showAd();
+                    setTimeout(resolve, 10);
+                } else {
+                    resolve();
+                }
+            }, currentDelay);
+        })
     }, []);
 
     return {
-        isEarnedReward: isEarnedReward ?? false,
+        isEarnedReward: earnedReward,
         showRewardedAd
     };
 };
@@ -105,26 +106,23 @@ export const useAutoShowRewardedAd = ({
     ...requestOptions
 }: UseAutoShowRewardedAdOptions): AutoShowRewardedAdResult => {
     const {
-        isLoaded,
-        load,
+        status,
         show,
-        isEarnedReward
-    } = useRewardedAd(adUnitId, requestOptions);
+        earnedReward
+    } = useRewardedAd({
+        adUnitId,
+        requestOptions,
+        autoLoad: shouldShow
+    });
 
     useEffect(() => {
-        if (shouldShow) {
-            load();
-        }
-    }, [shouldShow, load]);
-
-    useEffect(() => {
-        if (isLoaded) {
+        if (shouldShow && status === 'loaded') {
             getEvents()?.adMobRewardedAdShown?.();
-            show();
+            void show();
         }
-    }, [isLoaded, show]);
+    }, [shouldShow, status, show]);
 
     return {
-        isEarnedReward: isEarnedReward ?? false
+        isEarnedReward: earnedReward
     };
 };
