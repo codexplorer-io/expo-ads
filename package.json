@@ -3,10 +3,13 @@
   "version": "1.0.0",
   "main": "src/index.ts",
   "peerDependencies": {
-    "react-native-google-mobile-ads": "*",
     "react": "*",
+    "react-native": "*",
+    "react-native-google-mobile-ads": "*",
     "lodash": "*",
     "@codexporer.io/expo-device": "*",
-    "@codexporer.io/expo-app-theme": "*"
+    "@codexporer.io/expo-app-theme": "*",
+    "@codexporer.io/expo-layout-state": "*",
+    "@codexporer.io/react-hooks": "*"
   }
 }
